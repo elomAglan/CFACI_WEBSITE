@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -19,6 +20,7 @@ import { join } from 'path';
 import { PropertyService } from './property.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
+import { PropertyQueryDto } from './dto/property-query.dto';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -40,8 +42,8 @@ export class PropertyController {
 
   // Public
   @Get()
-  findAll() {
-    return this.propertyService.findAll();
+  findAll(@Query() query: PropertyQueryDto) {
+    return this.propertyService.findAll(query);
   }
 
   // Public

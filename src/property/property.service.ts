@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
+import { PropertyQueryDto } from './dto/property-query.dto';
 
 interface UploadedFile {
   filename: string;
@@ -13,7 +14,9 @@ interface UploadedFile {
 
 @Injectable()
 export class PropertyService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+  ) {}
 
   async create(createPropertyDto: CreatePropertyDto) {
     return this.prisma.property.create({
@@ -24,15 +27,75 @@ export class PropertyService {
     });
   }
 
-  async findAll() {
-    return this.prisma.property.findMany({
-      include: {
-        media: true,
+  async findAll(query: PropertyQueryDto) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const search = query.search?.trim();
+
+    const where = search
+      ? {
+          OR: [
+            {
+              title: {
+                contains: search,
+                mode: 'insensitive' as const,
+              },
+            },
+            {
+              description: {
+                contains: search,
+                mode: 'insensitive' as const,
+              },
+            },
+            {
+              category: {
+                contains: search,
+                mode: 'insensitive' as const,
+              },
+            },
+            {
+              city: {
+                contains: search,
+                mode: 'insensitive' as const,
+              },
+            },
+            {
+              district: {
+                contains: search,
+                mode: 'insensitive' as const,
+              },
+            },
+          ],
+        }
+      : {};
+
+    const [properties, total] = await Promise.all([
+      this.prisma.property.findMany({
+        where,
+        include: {
+          media: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+
+      this.prisma.property.count({
+        where,
+      }),
+    ]);
+
+    return {
+      data: properties,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    };
   }
 
   async findOne(id: number) {
@@ -44,7 +107,9 @@ export class PropertyService {
     });
 
     if (!property) {
-      throw new NotFoundException('Propriété introuvable');
+      throw new NotFoundException(
+        'Propriété introuvable',
+      );
     }
 
     return property;
@@ -83,7 +148,8 @@ export class PropertyService {
   ) {
     await this.findOne(propertyId);
 
-    const url = `/uploads/properties/${propertyId}/${file.filename}`;
+    const url =
+      `/uploads/properties/${propertyId}/${file.filename}`;
 
     return this.prisma.propertyMedia.create({
       data: {

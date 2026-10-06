@@ -7,6 +7,8 @@ import { AuthModule } from './auth/auth.module';
 import { PropertyModule } from './property/property.module';
 import { RequestModule } from './request/request.module';
 import { UserModule } from './user/user.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { RecruitmentModule } from './recruitment/recruitment.module';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { UserModule } from './user/user.module';
     PropertyModule,
     RequestModule,
     UserModule,
+    DashboardModule,
+    RecruitmentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
