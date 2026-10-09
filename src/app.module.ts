@@ -9,6 +9,7 @@ import { RequestModule } from './request/request.module';
 import { UserModule } from './user/user.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { RecruitmentModule } from './recruitment/recruitment.module';
+import { ApplicationModule } from './application/application.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { RecruitmentModule } from './recruitment/recruitment.module';
     UserModule,
     DashboardModule,
     RecruitmentModule,
+    ApplicationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

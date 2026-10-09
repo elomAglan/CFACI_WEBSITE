@@ -17,6 +17,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { UpdateUserDto } from './dto/update-user.dto';   // ← ajouté
 import { UserQueryDto } from './dto/user-query.dto';
 
 @Controller('users')
@@ -38,6 +39,17 @@ export class UserController {
   ) {
     return this.userService.findOne(id);
   }
+
+  /* =========================
+   * MODIFIER LES INFORMATIONS
+   * ========================= */
+  @Patch(':id')                                          // ← ajouté
+  update(                                                // ← ajouté
+    @Param('id', ParseIntPipe) id: number,               // ← ajouté
+    @Body() updateUserDto: UpdateUserDto,                // ← ajouté
+  ) {                                                    // ← ajouté
+    return this.userService.update(id, updateUserDto);   // ← ajouté
+  }                                                      // ← ajouté
 
   @Patch(':id/status')
   updateStatus(

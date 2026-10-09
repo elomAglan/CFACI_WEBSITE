@@ -57,15 +57,33 @@ model PropertyMedia {
 }
 
 model Recruitment {
-  id           Int      @id @default(autoincrement())
+  id           Int    @id @default(autoincrement())
   title        String
   description  String
   contractType String
-  status       String   @default("OPEN")
+  status       String @default("OPEN")
   location     String
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  applications Application[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Application {
+  id        Int     @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String
+  phone     String?
+  message   String?
+  cvUrl     String?
+
+  recruitment   Recruitment @relation(fields: [recruitmentId], references: [id], onDelete: Cascade)
+  recruitmentId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Request {

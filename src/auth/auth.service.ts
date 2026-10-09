@@ -19,6 +19,9 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  /* =========================
+   * INSCRIPTION
+   * ========================= */
   async register(registerDto: RegisterDto) {
     const { firstName, lastName, email, phone, password } = registerDto;
 
@@ -47,6 +50,9 @@ export class AuthService {
     return result;
   }
 
+  /* =========================
+   * CONNEXION
+   * ========================= */
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
 
@@ -85,6 +91,36 @@ export class AuthService {
     };
   }
 
+  /* =========================
+   * PROFIL UTILISATEUR CONNECTÉ
+   * ========================= */
+  async me(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        status: true,
+        role: true,
+        emailVerified: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Utilisateur introuvable');
+    }
+
+    return user;
+  }
+
+  /* =========================
+   * MOT DE PASSE OUBLIÉ
+   * ========================= */
   async forgotPassword(email: string) {
     const user = await this.prisma.user.findUnique({
       where: { email },
@@ -103,9 +139,7 @@ export class AuthService {
       where: { id: user.id },
       data: {
         passwordResetToken: resetToken,
-        passwordResetExpiresAt: new Date(
-          Date.now() + 60 * 60 * 1000,
-        ),
+        passwordResetExpiresAt: new Date(Date.now() + 60 * 60 * 1000),
       },
     });
 
@@ -116,6 +150,9 @@ export class AuthService {
     };
   }
 
+  /* =========================
+   * RÉINITIALISER MOT DE PASSE
+   * ========================= */
   async resetPassword(token: string, newPassword: string) {
     const user = await this.prisma.user.findFirst({
       where: {
@@ -145,6 +182,51 @@ export class AuthService {
 
     return {
       message: 'Votre mot de passe a été réinitialisé avec succès',
+    };
+  }
+
+  /* =========================
+   * CHANGER LE MOT DE PASSE
+   * ========================= */
+  async changePassword(
+    userId: number,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Utilisateur introuvable');
+    }
+
+    const passwordValid = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
+
+    if (!passwordValid) {
+      throw new UnauthorizedException(
+        'Le mot de passe actuel est incorrect',
+      );
+    }
+
+    if (currentPassword === newPassword) {
+      throw new ConflictException(
+        'Le nouveau mot de passe doit être différent de l’actuel',
+      );
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+
+    return {
+      message: 'Votre mot de passe a été modifié avec succès.',
     };
   }
 }
